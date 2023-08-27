@@ -1,0 +1,69 @@
+1. register model 
+    * TB equivalent representaiton of the design registers
+    *every design has 2 types of register 
+        * Control registers --> RW
+        * Status registers --> Read only.
+2. Design O/P = function (design i/p, registers present in the design)
+    Ref model O/P = function ( design inputs, registers_model_value)
+    then we compare the design o/p against the "ref model o/p"
+
+3. Register Model is used in every project in the industry
+
+4. Register model can be implemented in SV, SV & UVM also.
+    *register model works in 4 stages                                      ////Most of the time STAGE1 and STAGE2 are done by the scripts. 
+        STAGE1: preparing the data for the register model devp. 
+                how many registers, fields, reset values, acces_types, etc.
+
+        STAGE2: Develop the register models
+                uvm_reg, uvm_reg_field, uvm_reg_block, uvm_reg_map  
+
+        STAGE3: integrate the register model        ///////////////////////only 1 person in the entire team does it.
+                * instantiate the mac_reg_block in the mac_env
+                *create the reg_block, call reg_block.build method.
+                *map the reg_block to the adapter and sequencer.
+                    * reg_block.set_sequencer(wb_adapter, evn.wb_proc_agent_i.sqr)
+                *Add the reg_block into the resource_db, so theta anywhere in the TB env., we can get the reg_block handle.
+        
+        STAGE4: Using the Register model      ///////////////////99% of the time, this is assigned in the companies to work with.
+                How to get the register block handle from the uvm_resource_db
+                    * anywhere we need to you the register block, we must get the handle first( WE MUST NOT CREATE IT again)
+                How to use the reg_block for 
+                    * TESTCASE DEVELOPMENT
+                    *REGISTER FIELD FUNCTIONAL COVERAGE
+                    *SCOREBOARD IMPLEMENTATIONS.
+
+
+5. Register tests  ------- repeating the same test for 1, 5, 10 repetitions will have identify the cases where the registers are linked with one another which is actually done in the companies
+    * reg BD test write and read - 2 registers are failing -- miiaddress, collision config
+    * reg front Door wwrite and read test ( MOST IMPORTANT TEST) - 3 registers are failing --   miicommand - problem with RTL code   
+                                                                                                moder - Problem with Design RTL team
+                                                                                                miistatus  - wb_proc_base_seq_lib.sv --> from line 75.
+
+
+                                                                                                5 iterations  -- 2 errors. --miicommand
+                                                                                                                            --txbdnum
+
+    2 more testcases are possible 
+        * FD Write & BD Read
+        * BD Write & FD read
+
+6.One register programming can have impact on the other registers. Ex: programming miicommand[0] 1 => miistatus[2],[1] = 2'b11
+    So ,we should keep a check point to our sequence, whenever miicommand[0] is getting written as '1', we should updae the register model miistatus predicted value to 2'b11 for [2:1] positions.
+    this needs to be done in the SCOREBOARD too. as we have register model there too. 
+***Debugging requires dynamic decision making.
+
+
+7. Register reset testcases,
+   register write-read testcases.
+    ***Abover 2 testcases can be debugged with understanding of waveform and RTL debugging/tracing. (GIVEN TO FRESHERS.)
+   Functional testcases. --> Requires deeper understanding of the design bahavior.
+
+8. register wr-rd test is failing   
+    debug ==> 3 errors (ex)
+        you are expected to debug why falire is happening. 
+        if it's simply reporting the no.of errors, then even a 10th class student can do it.
+
+
+9. What really helps in the job is debugging....so do lots of debugging.......
+
+DEBUGGIN SKILLS ARE VERY IMPORTANT IN THE JOB AS THEY ARE THE ONES THAT MAKES A DIFFERENCE B/W A GOOD AND VERIFICATION ENGINEERS.

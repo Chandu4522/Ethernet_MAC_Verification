@@ -1,0 +1,54 @@
+Functional testcase DEVELOPMENT
+    # 2 stages      - all terstcases start from the TESTPLAN
+        Sanity testcases    - Targeted for checking the control path and the data path. 
+        Funcitonal testcases
+
+2. Every testcase involves 3-4 stages: 
+    1: Apply the voltage (wait for the V to be good(Vgood)) and then apply reset, release reset. 
+        #( Vggod and Vbad)  
+        # Apply the reset and release  -----> Done in the top module ( we don't need to go anything in the sequence)
+    2: register Programming specific to current test requirements.  ------> Do it as part of the ocnfiguration sequence 
+        # FD model
+        #Transmit ---> at the end of the sequence.
+        #Load the transmit buffer description as per below
+            ## Load the memory with the data ( that we want to transmit)
+        #Initiate the transmission 
+        #Generate the trafic -----------> TB components, in this case the PHY driver
+            Ex: mac_fd_rx_test  - PHY BFM needs to generate the frames.
+        #Checking the design o/p with the expected o/p behavior. ---> scoreboard
+            #This is not the part of the testcases, it is implemented in the scoreboard.
+
+3. ethernet MAC design transmit the mSB first.
+    in a byte, it transmits the lower nibble first.
+
+    Preamble => MSB: Preamble[55:48]
+    our tx and rx interface is 4 bits only => it sends lower 4 bits first, followed by the upper 4 bits.
+
+4. Current Issues:
+    # Same 32 bits are getting trnsmitted 2 times.  -------> solved by implementing the clocking block in the memory interface and using it in the memory.sv file.
+    # last memory read is happening to 32'h1000_01F0, it should happen to 32'h1000_01Fc -----> solved by using clocking block 
+    #frame transmission stopped after some time, memory reads are continuing. ----> sloved by correcting the line number 14 in memory.sv
+                                                                            ----> the last 3/4 of the entries were loaded with 0's. Hence th DMA is getting 32'h0 data.
+                                                                            --> Hence it was driving all the 0's (which we assumed as if not driving any data.)
+        ##is it because we configured frame size to be smaller?--->not the right debug
+
+
+5. DATA is transmitted in a nibble by nibble basis (nibble = 4 bits.)
+  ClK - 1Hz
+    # how many clock rising edges per second = 1
+    # data bus width at the PHY transmit or receive intf = 4 (mibble)
+    # 1 nibble goes at the every positive edge of the clock.
+        #When running clock at 1Hz, how many bits willl be transferred per sec = 4
+ Clk - 10Mbps = 10*1024*1024 bits/second
+              = 10*1000*1000 (for conveneance)
+        What should be the clk frequencey = 10*1000*1000/4 = 2.5 MHz = 400 needs
+    clk = 100Mbps == 40 ns
+
+
+6. Debugging ----> comment out the lines 242-244 in the file wb_proc_base_seq_lib and debug. 
+            -----> The end result of the debug should be that you should arrive at a conclusion that the issue is due to commenting out the lines 242-244 in the file wb_proc_base_seq_lib.
+
+
+7. Transmit has completed. 
+    --> int_o got generated.
+    --> processor should 
